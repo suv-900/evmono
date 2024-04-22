@@ -56,11 +56,7 @@ public class TokenService {
             .toString();
     }
     
-    public Long extractID(String token)throws JWTVerificationException,TokenExpiredException,AlgorithmMismatchException{
-        
-        Claim claim = verifier.verify(token).getClaim("ID");
-        return Long.parseLong(claim.toString());
-    }
+    
 
     public void verifyToken(String token)throws JWTVerificationException,TokenExpiredException,Exception{
         verifier.verify(token);
@@ -74,6 +70,20 @@ public class TokenService {
         if(issuerType != "host"){
             throw new UnauthorizedAccessException("Unknown token");
         }
+    }
+    
+    public Long extractUserID(String token)throws JWTVerificationException,TokenExpiredException,AlgorithmMismatchException{
+        DecodedJWT decoded = verifier.verify(token);
+
+        String issuerType = decoded.getIssuer();
+
+        if(issuerType != "user"){
+            throw new UnauthorizedAccessException("Unknown token");
+        }
+
+        Long userID = Long.parseLong(decoded.getClaim("ID").toString());
+
+        return userID;
     }
 
     public Long extractHostID(String token)throws JWTCreationException,TokenExpiredException,Exception,UnauthorizedAccessException{

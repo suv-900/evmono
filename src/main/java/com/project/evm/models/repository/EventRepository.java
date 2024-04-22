@@ -8,6 +8,6 @@ import com.project.evm.models.entities.Event;
 
 public interface EventRepository extends JpaRepository<Event,Long>{
     @Query(value="UPDATE events SET totalTickets = totalTickets + :amount WHERE id = :eventID",nativeQuery=true)
-    public void increaseTotalTickets(@Param("eventID")Long eventID,@Param("amount")Long amount);
+    public void increaseTicketCount(@Param("eventID")Long eventID,@Param("amount")Long amount);
 
 }

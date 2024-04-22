@@ -68,8 +68,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({Exception.class,
         NullPointerException.class,
         JWTCreationException.class})
-    public void handleException(Exception e){
+    public String handleException(Exception e){
         log.error(e.getMessage());
+        return e.getMessage();
     }
 
     // @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

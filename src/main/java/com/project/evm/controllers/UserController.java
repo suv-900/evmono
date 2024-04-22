@@ -15,8 +15,6 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.project.evm.exceptions.CredentialsDontMatchException;
-import com.project.evm.exceptions.InValidTokenException;
-import com.project.evm.exceptions.UnauthorizedAccessException;
 import com.project.evm.exceptions.UserExistsException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
@@ -27,6 +25,7 @@ import com.project.evm.services.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -86,6 +85,13 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/buy-ticket/{eventID}")
+    public void buyTicket(@RequestHeader(value="Token",required=true)String token,@PathVariable("eventID")@NotBlank Long eventID){
+        Long userID = tokenService.extractUserID(token);
+
+
+    }
     // @ResponseStatus(HttpStatus.OK)
     // @DeleteMapping("/delete")
     // public void deleteUser(@RequestHeader(value = "Token",required = true)String token)

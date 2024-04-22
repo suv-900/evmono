@@ -8,18 +8,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.project.evm.exceptions.CredentialsDontMatchException;
+import com.project.evm.exceptions.EventNotFoundException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
 import com.project.evm.models.dto.UserLogin;
+import com.project.evm.models.entities.Event;
+import com.project.evm.models.entities.Ticket;
 import com.project.evm.models.entities.User;
+import com.project.evm.models.repository.EventRepository;
+import com.project.evm.models.repository.TicketRepository;
 import com.project.evm.models.repository.UserRepository;
 
 @Service
 public class UserService {
     
     @Autowired
-    private UserRepository repository;
-   
+    private UserRepository userRepository;
+    
+    @Autowired
+    private EventService eventService;
+
+    @Autowired
+    private TicketRepository ticketRepository;
+
     @Autowired
     private PasswordHasher hasher;
 
@@ -117,4 +128,25 @@ public class UserService {
 
     }
     
+    public User findUserById(Long userId)throws UserNotFoundException,Exception{
+        Optional<User> user = userRepository.findById(userId);
+
+        if(user.isEmpty()){
+            throw new UserNotFoundException();
+        }
+
+        return user.get();
+    }
+
+    public Ticket buyTicket(Long userID,Long eventID)throws UserNotFoundException,EventNotFoundException,Exception{
+
+        User user = findUserById(userID);
+        Event event = eventService.getEventById(eventID);
+
+        Ticket ticket = new Ticket();
+        ticket.setForEvent(event);
+        ticket.setUnderName(user);
+        
+        return ticketRepository.save(ticket);
+    }
 }

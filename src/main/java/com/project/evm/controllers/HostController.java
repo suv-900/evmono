@@ -29,6 +29,8 @@ import com.project.evm.services.TokenService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
 
 @RestController
 @RequestMapping("/host")
@@ -40,7 +42,7 @@ public class HostController {
     private TokenService tokenService;
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/create")
+    @PostMapping("/register")
     public void createHost(@Valid @RequestBody Host host,HttpServletResponse response)throws HostExistsException,Exception{
 
         if(hostService.hostExists(host.getUsername(),host.getEmail())){
@@ -116,5 +118,16 @@ public class HostController {
         tokenService.verifyHostToken(token);
 
         hostService.deleteEventById(eventID);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/increaseTicketCount/{eventID}/{amount}")
+    public void updateEventTicketCount(@PathVariable("eventID")@NotNull(message="eventID cannot be null") Long eventID,
+        @PathVariable("amount") @NotNull(message="increase amount cannot be null")Long amount,
+        @RequestHeader(value="Token",required=true)String token)
+    throws UnauthorizedAccessException,TokenExpiredException,JWTVerificationException,NullPointerException,Exception
+    {
+        tokenService.verifyToken(token);
+        hostService.increaseTicketCount(eventID,amount);
     }
 }

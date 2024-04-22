@@ -82,8 +82,8 @@ public class HostService {
         return hostRepository.hostExists(username,email);
     }
 
-    public void increaseTotalTickets(Long eventID,Long amount)throws Exception{
-        eventRepository.increaseTotalTickets(eventID,amount);
+    public void increaseTicketCount(Long eventID,Long amount)throws Exception{
+        eventRepository.increaseTicketCount(eventID,amount);
     }
 
     public Optional<Event> getEvent(@NonNull Long eventID)throws Exception{
