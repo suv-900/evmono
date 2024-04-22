@@ -130,4 +130,5 @@ public class HostController {
         tokenService.verifyToken(token);
         hostService.increaseTicketCount(eventID,amount);
     }
+
 }

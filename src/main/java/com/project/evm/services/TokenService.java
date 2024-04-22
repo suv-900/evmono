@@ -14,7 +14,6 @@ import com.auth0.jwt.exceptions.AlgorithmMismatchException;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.project.evm.exceptions.UnauthorizedAccessException;
 
@@ -32,15 +31,6 @@ public class TokenService {
         verifier = JWT.require(algorithm).build();
     }
 
-    public String generateToken(String username,String issuerType)throws JWTCreationException,Exception{
-        return JWT.create()
-            .withIssuer(issuerType)
-            .withClaim("username",username)
-            .withIssuedAt(new Date())
-            .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-            .sign(algorithm);
-    }
-
     public String generateTokenWithID(Long ID,String issuerType)throws JWTCreationException,Exception{
         return JWT.create()
             .withIssuer(issuerType)
@@ -50,18 +40,7 @@ public class TokenService {
             .sign(algorithm);
 
     }
-    public String extractUsername(String token)throws JWTVerificationException,TokenExpiredException,AlgorithmMismatchException{
-        return verifier.verify(token)
-            .getClaim("username")
-            .toString();
-    }
     
-    
-
-    public void verifyToken(String token)throws JWTVerificationException,TokenExpiredException,Exception{
-        verifier.verify(token);
-    }
-
     public void verifyHostToken(String token)throws UnauthorizedAccessException,JWTVerificationException,TokenExpiredException{
         DecodedJWT decoded = verifier.verify(token);
 
@@ -72,6 +51,15 @@ public class TokenService {
         }
     }
     
+    public void verifyUserToken(String token)throws UnauthorizedAccessException,JWTVerificationException,TokenExpiredException{
+        DecodedJWT decoded = verifier.verify(token);
+
+        String issuerType = decoded.getIssuer();
+
+        if(issuerType != "user"){
+            throw new UnauthorizedAccessException("Unknown token");
+        }
+    }
     public Long extractUserID(String token)throws JWTVerificationException,TokenExpiredException,AlgorithmMismatchException{
         DecodedJWT decoded = verifier.verify(token);
 
@@ -113,4 +101,21 @@ public class TokenService {
     //     //TODO store adminName
     //     // String adminName = decoded.getClaim("adminName").toString();
     // }
+    public String extractUsername(String token)throws JWTVerificationException,TokenExpiredException,AlgorithmMismatchException{
+        return verifier.verify(token)
+            .getClaim("username")
+            .toString();
+    }
+    
+    public void verifyToken(String token)throws JWTVerificationException,TokenExpiredException,Exception{
+        verifier.verify(token);
+    }
+    public String generateToken(String username,String issuerType)throws JWTCreationException,Exception{
+        return JWT.create()
+            .withIssuer(issuerType)
+            .withClaim("username",username)
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+            .sign(algorithm);
+    }
 }

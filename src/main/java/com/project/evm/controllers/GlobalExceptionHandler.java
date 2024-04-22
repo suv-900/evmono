@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.project.evm.exceptions.EventExistsException;
 import com.project.evm.exceptions.EventNotFoundException;
 import com.project.evm.exceptions.HostExistsException;
 import com.project.evm.exceptions.HostNotFoundException;
 import com.project.evm.exceptions.InValidTokenException;
+import com.project.evm.exceptions.TicketExistsException;
+import com.project.evm.exceptions.TicketNotFoundException;
 import com.project.evm.exceptions.UnauthorizedAccessException;
 import com.project.evm.exceptions.UserExistsException;
 import com.project.evm.exceptions.UserNotFoundException;
@@ -45,7 +48,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         UserNotFoundException.class,
         HostNotFoundException.class,
-        EventNotFoundException.class})
+        EventNotFoundException.class,
+        TicketNotFoundException.class})
     public String handleUserNotFoundException(UserNotFoundException e){
         log.error(e.getMessage());
         return e.getMessage();
@@ -58,7 +62,11 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler({UserExistsException.class,HostExistsException.class})
+    @ExceptionHandler({
+        UserExistsException.class,
+        HostExistsException.class,
+        TicketExistsException.class,
+        EventExistsException.class})
     public String handleUserExistsException(UserExistsException e){
         log.error(e.getMessage());
         return e.getMessage();

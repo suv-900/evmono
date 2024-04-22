@@ -15,10 +15,13 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.project.evm.exceptions.CredentialsDontMatchException;
+import com.project.evm.exceptions.EventNotFoundException;
+import com.project.evm.exceptions.TicketExistsException;
 import com.project.evm.exceptions.UserExistsException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
 import com.project.evm.models.dto.UserLogin;
+import com.project.evm.models.entities.Ticket;
 import com.project.evm.models.entities.User;
 import com.project.evm.services.TokenService;
 import com.project.evm.services.UserService;
@@ -26,9 +29,7 @@ import com.project.evm.services.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RequestMapping("/users")
 @RestController
 public class UserController {
@@ -85,12 +86,20 @@ public class UserController {
         return userService.getUserById(id);
     }
 
+    @ResponseStatus(HttpStatus.FOUND)
+    @PostMapping("/verifyTicket")
+    public void verifyTicket(@RequestBody @NotBlank String ticket){
+
+    }
+    
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/buy-ticket/{eventID}")
-    public void buyTicket(@RequestHeader(value="Token",required=true)String token,@PathVariable("eventID")@NotBlank Long eventID){
+    @PostMapping("/registerForEvent/{eventID}")
+    public Ticket registerForEvent(@RequestHeader(value="Token",required=true)String token,@PathVariable("eventID")@NotBlank Long eventID)
+    throws TicketExistsException,UserNotFoundException,EventNotFoundException,Exception
+    {
         Long userID = tokenService.extractUserID(token);
 
-
+        return userService.buyTicket(userID,eventID);
     }
     // @ResponseStatus(HttpStatus.OK)
     // @DeleteMapping("/delete")

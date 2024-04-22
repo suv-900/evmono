@@ -21,6 +21,10 @@ public class Ticket {
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
     private Long ticketId;
     
+    private Long userID;
+
+    private Long eventID;
+    
     @OneToOne
     @Column(name="forEvent",nullable=false)
     private Event forEvent;

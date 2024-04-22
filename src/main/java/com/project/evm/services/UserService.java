@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.project.evm.exceptions.CredentialsDontMatchException;
 import com.project.evm.exceptions.EventNotFoundException;
+import com.project.evm.exceptions.TicketExistsException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
 import com.project.evm.models.dto.UserLogin;
@@ -29,7 +30,7 @@ public class UserService {
     private EventService eventService;
 
     @Autowired
-    private TicketRepository ticketRepository;
+    private TicketService ticketService;
 
     @Autowired
     private PasswordHasher hasher;
@@ -39,7 +40,7 @@ public class UserService {
         
         user.setPassword(hashedPassword);
         
-        User savedUser = repository.save(user);
+        User savedUser = userRepository.save(user);
 
         return savedUser.getId();
     }
@@ -48,7 +49,7 @@ public class UserService {
         CredentialsDontMatchException,Exception,UserNotFoundException
     {
         
-        User user = repository.getPasswordByUsernameWithID(username);
+        User user = userRepository.getPasswordByUsernameWithID(username);
         
         if(user == null){
             throw new UserNotFoundException("User doesnt exists try registering first.");
@@ -60,7 +61,7 @@ public class UserService {
     }
     
     public UserDTO getUserById(Long userID)throws UserNotFoundException,Exception{
-        Optional<User> userEntity = repository.getUserById(userID);
+        Optional<User> userEntity = userRepository.getUserById(userID);
         
         if(userEntity.isEmpty()){
             throw new UserNotFoundException();
@@ -77,15 +78,15 @@ public class UserService {
 
     //needs to be protected 
     public User getUserFullDetails(Long userID)throws Exception{
-        return repository.getReferenceById(userID);
+        return userRepository.getReferenceById(userID);
     }
 
     public void updateUser(User user)throws Exception{
-        repository.save(user);
+        userRepository.save(user);
     }
 
     public void deleteUser(User user)throws Exception{
-       repository.delete(user); 
+       userRepository.delete(user); 
     }
 
     // public void deleteUserByUsername(String username)throws Exception{
@@ -93,18 +94,18 @@ public class UserService {
     // }
 
     public boolean existsByUsername(String username)throws Exception{
-        return repository.existsByUsername(username);
+        return userRepository.existsByUsername(username);
     }
 
     public boolean existsByEmail(String email)throws Exception{
-        return repository.existsByEmail(email);
+        return userRepository.existsByEmail(email);
     }
 
     public long getCount()throws Exception{
-        return repository.getCount();
+        return userRepository.getCount();
     }
     public boolean exists(User user)throws Exception{
-        return repository.userExists(user.getName(),user.getEmail());
+        return userRepository.userExists(user.getName(),user.getEmail());
     }
 
     //TODO:idList must not contain null
@@ -112,7 +113,7 @@ public class UserService {
     public List<UserDTO> findAllById(Iterable<Long> idList)throws Exception{
         List<UserDTO> list = new LinkedList<>();
 
-        List<User> entityList = repository.findAllById(idList);
+        List<User> entityList = userRepository.findAllById(idList);
 
         entityList.forEach((userEntity)->{
             UserDTO newDTO = new UserDTO();
@@ -138,7 +139,11 @@ public class UserService {
         return user.get();
     }
 
-    public Ticket buyTicket(Long userID,Long eventID)throws UserNotFoundException,EventNotFoundException,Exception{
+    public Ticket buyTicket(Long userID,Long eventID)throws UserNotFoundException,EventNotFoundException,TicketExistsException,Exception{
+
+        if(ticketService.ticketExists(userID,eventID)){
+            throw new TicketExistsException();
+        } 
 
         User user = findUserById(userID);
         Event event = eventService.getEventById(eventID);
@@ -146,7 +151,9 @@ public class UserService {
         Ticket ticket = new Ticket();
         ticket.setForEvent(event);
         ticket.setUnderName(user);
-        
-        return ticketRepository.save(ticket);
+        ticket.setUserID(user.getId());
+        ticket.setEventID(event.getId());
+
+        return ticketService.addTicket(ticket);
     }
 }
