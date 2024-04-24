@@ -8,6 +8,6 @@ import com.project.evm.models.entities.Ticket;
 
 public interface TicketRepository extends JpaRepository<Ticket,Long>{
 
-    @Query(value="SELECT EXISTS(SELECT 1 FROM tickets WHERE userID = :userID AND eventID = :eventID) AS ticket_exists",nativeQuery=true)
+    @Query(value="SELECT EXISTS(SELECT 1 FROM Ticket WHERE userID = :userID AND eventID = :eventID) AS ticket_exists",nativeQuery=true)
     public boolean ticketExists(@Param("userID")Long userID,@Param("eventID")Long eventID);
 }

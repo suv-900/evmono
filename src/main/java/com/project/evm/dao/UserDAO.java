@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.spel.ast.Projection;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,6 @@ public class UserDAO {
 
     public User addUser(User user)throws Exception{
         Session session = this.sessionFactory.getCurrentSession();
-        
         session.persist("users",user);
 
         log.info("User added: "+user.getName());

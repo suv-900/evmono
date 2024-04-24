@@ -51,7 +51,7 @@ public class HostService {
         return host.getId();
     }
 
-    public HostDTO getHostById(Long hostID)throws Exception{
+    public Host getHostById(Long hostID)throws Exception{
         return hostRepository.getHostById(hostID);
     }
 

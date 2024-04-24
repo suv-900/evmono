@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name="tickets")
+@Table
 public class Ticket {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
@@ -26,14 +26,11 @@ public class Ticket {
     private Long eventID;
     
     @OneToOne
-    @Column(name="forEvent",nullable=false)
     private Event forEvent;
 
     @OneToOne
-    @Column(name="underName",nullable=false)
     private User underName;
 
-    @Column(name="issuedAt",nullable=false)
     private Date issuedAt;
 
 }

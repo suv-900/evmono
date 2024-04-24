@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name="host")
+@Table
 public class Host {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -43,7 +43,7 @@ public class Host {
     @NotBlank(message = "Password cannot be blank")
     private String password;
 
-    @ManyToMany(mappedBy="hostedBy")
+    @OneToMany(mappedBy="hostedBy")
     private List<Event> eventsCreated;
 
 }

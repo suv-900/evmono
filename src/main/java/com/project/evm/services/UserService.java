@@ -4,6 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,14 +15,15 @@ import com.project.evm.exceptions.EventNotFoundException;
 import com.project.evm.exceptions.TicketExistsException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
-import com.project.evm.models.dto.UserLogin;
 import com.project.evm.models.entities.Event;
 import com.project.evm.models.entities.Ticket;
 import com.project.evm.models.entities.User;
-import com.project.evm.models.repository.EventRepository;
-import com.project.evm.models.repository.TicketRepository;
 import com.project.evm.models.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class UserService {
     
@@ -32,18 +36,41 @@ public class UserService {
     @Autowired
     private TicketService ticketService;
 
+    private SessionFactory sessionFactory;
+
+    public UserService(){
+        this.sessionFactory = new Configuration().configure().buildSessionFactory();
+        log.info("Session factory "+sessionFactory);
+    }
+
     @Autowired
     private PasswordHasher hasher;
 
+    @Transactional
     public Long addUser(User user)throws Exception{
-        String hashedPassword = hasher.hashPassword(user.getPassword());
-        
-        user.setPassword(hashedPassword);
-        
-        User savedUser = userRepository.save(user);
 
-        return savedUser.getId();
+        String hashedPassword = hasher.hashPassword(user.getPassword());
+        user.setPassword(hashedPassword);
+
+        Session session = sessionFactory.getCurrentSession();
+        
+        //attaches object to persistence state
+        session.persist(user);
+        //syncs the objects in persistence state to the datastore
+        session.flush();
+        
+        return user.getId();
     }
+
+    // public Long addUser(User user)throws Exception{
+    //     String hashedPassword = hasher.hashPassword(user.getPassword());
+        
+    //     user.setPassword(hashedPassword);
+        
+    //     User savedUser = userRepository.save(user);
+
+    //     return savedUser.getId();
+    // }
     
     public Long loginUser(String username,String password)throws 
         CredentialsDontMatchException,Exception,UserNotFoundException
