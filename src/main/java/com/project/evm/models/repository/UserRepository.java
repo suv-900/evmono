@@ -13,7 +13,7 @@ import com.project.evm.models.entities.User;
 @Repository
 public interface UserRepository extends JpaRepository<User,Long>{
 
-    @Query(value = "SELECT COUNT(*) FROM users",nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM ",nativeQuery = true)
     public Long getCount();
 
     @Query(value = "SELECT EXISTS(SELECT 1 FROM users WHERE name = :username) AS user_exists",nativeQuery = true)

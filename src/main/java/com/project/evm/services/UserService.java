@@ -6,10 +6,14 @@ import java.util.Optional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.context.spi.CurrentSessionContext;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.evm.config.HibernateUtil;
 import com.project.evm.exceptions.CredentialsDontMatchException;
 import com.project.evm.exceptions.EventNotFoundException;
 import com.project.evm.exceptions.TicketExistsException;
@@ -36,30 +40,53 @@ public class UserService {
     @Autowired
     private TicketService ticketService;
 
-    private SessionFactory sessionFactory;
-
-    public UserService(){
-        this.sessionFactory = new Configuration().configure().buildSessionFactory();
-        log.info("Session factory "+sessionFactory);
-    }
+    private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     @Autowired
     private PasswordHasher hasher;
+    //persistent state
+    //sessions
+
+    
 
     @Transactional
-    public Long addUser(User user)throws Exception{
+    public void addUser(User user){
 
         String hashedPassword = hasher.hashPassword(user.getPassword());
         user.setPassword(hashedPassword);
-
+        
+        //session object = unit of work with database
         Session session = sessionFactory.getCurrentSession();
         
         //attaches object to persistence state
         session.persist(user);
-        //syncs the objects in persistence state to the datastore
-        session.flush();
         
-        return user.getId();
+        //syncs the objects in persistence state to the datastore
+        //session.flush();
+    }
+
+    @Transactional
+    public Long getUserID(User user){
+        Session session = sessionFactory.getCurrentSession();
+        String hql = "select id from User where name = :name";
+        Query<Long> query = session.createQuery(hql,Long.class);
+
+        query.setParameter("name",user.getName());
+
+        Long userID = query.uniqueResult();
+        return userID;
+    }
+
+    @Transactional
+    public User updateUser(User user){
+        Session session = sessionFactory.getCurrentSession();
+        return session.merge(user);
+    }
+
+    @Transactional
+    public void deleteUser(User user){
+        Session session = sessionFactory.getCurrentSession();
+        session.remove(user);
     }
 
     // public Long addUser(User user)throws Exception{
@@ -76,17 +103,53 @@ public class UserService {
         CredentialsDontMatchException,Exception,UserNotFoundException
     {
         
-        User user = userRepository.getPasswordByUsernameWithID(username);
+        Session session = sessionFactory.getCurrentSession();
         
-        if(user == null){
+        String hql = "select u.password,u.id from User u where u.name = :name";
+        
+        Query<Object[]> query = session.createQuery(hql,Object[].class);
+        
+        query.setParameter("name",username);
+        
+        Object[] result = query.uniqueResult();
+
+        if(result.length == 0){
             throw new UserNotFoundException("User doesnt exists try registering first.");
         }
+        String dbPassword = (String) result[0];
+        Long userID = (Long) result[1];
+        
+        hasher.comparePassword(dbPassword,password);
 
-        hasher.comparePassword(user.getPassword(),password);
-
-        return user.getId();
+        return userID;
     }
     
+    
+    @Transactional
+    public User getUserByID(Long userID)throws UserNotFoundException{
+        Session session = sessionFactory.getCurrentSession();
+
+        String hql = "select u.name,u.email,u.description from User u where u.id = :id";
+
+        Query<String[]> query = session.createQuery(hql,String[].class);
+
+        query.setParameter("id",userID);
+
+        Optional<String[]> resultOp = query.uniqueResultOptional();
+
+        if(resultOp.isEmpty()){
+            throw new UserNotFoundException("User doesnt exists");
+        }
+
+        String[] result = resultOp.get();
+        User newUser = new User();
+        newUser.setName(result[0]);
+        newUser.setEmail(result[1]);
+        newUser.setDescription(result[2]);
+
+        return newUser;
+    }
+
     public UserDTO getUserById(Long userID)throws UserNotFoundException,Exception{
         Optional<User> userEntity = userRepository.getUserById(userID);
         
@@ -104,66 +167,109 @@ public class UserService {
     }
 
     //needs to be protected 
-    public User getUserFullDetails(Long userID)throws Exception{
-        return userRepository.getReferenceById(userID);
-    }
+    @Transactional
+    public List<User> getFullUserDetailsList(Long[] userIDs){
+        List<User> list = new LinkedList<User>();
+        
+        String hql = "from User u where u.id = :id";
+        Session session = sessionFactory.getCurrentSession();
+        Query<User> query = session.createQuery(hql,User.class);
+        
+        for(Long userID : userIDs){
+            query.setParameter("id",userID);
+            User user = query.uniqueResult();
+            list.add(user); 
+        }
 
-    public void updateUser(User user)throws Exception{
-        userRepository.save(user);
+        return list;
     }
+    
+    @Transactional
+    public List<User> getFullUserDetailsList(List<Long> userIDs){
+        List<User> list = new LinkedList<User>();
+        
+        String hql = "from User u where u.id = :id";
+        Session session = sessionFactory.getCurrentSession();
+        Query<User> query = session.createQuery(hql,User.class);
+        
+        userIDs.forEach((userID)->{
+            query.setParameter("id",userID);
+            User user = query.uniqueResult();
+            list.add(user); 
+        });
+                
+        return list;
+    } 
 
-    public void deleteUser(User user)throws Exception{
-       userRepository.delete(user); 
+    public Optional<User> getFullUserDetails(Long userID){
+        String hql = "from User u where u.id = :id";
+        Session session = sessionFactory.getCurrentSession();
+        Query<User> query = session.createQuery(hql,User.class);
+        query.setParameter("id",userID);
+        Optional<User> user = query.uniqueResultOptional();
+        return user;
     }
 
     // public void deleteUserByUsername(String username)throws Exception{
     //     userRepository.deleteUserByUsername(username);
     // }
 
-    public boolean existsByUsername(String username)throws Exception{
-        return userRepository.existsByUsername(username);
+    public boolean existsByUsername(String username){
+        String hql = "select count(u) from User u where u.name = :name";
+        Session session = sessionFactory.getCurrentSession();
+        Query<Integer> query = session.createQuery(hql,Integer.class);
+        query.setParameter("name",username);
+        Integer count = query.uniqueResult();
+        return count > 0;
+    }
+    
+    public boolean existsByEmail(String email){
+        String hql = "select count(u) from User u where u.email = :email";
+        Session session = sessionFactory.getCurrentSession();
+        Query<Integer> query = session.createQuery(hql,Integer.class);
+        query.setParameter("email",email);
+        Integer count = query.uniqueResult();
+        return count > 0;
     }
 
-    public boolean existsByEmail(String email)throws Exception{
-        return userRepository.existsByEmail(email);
+    public Long getCount(){
+        String hql = "select count(u) from User u";
+        Session session = sessionFactory.getCurrentSession();
+        Query<Long> query = session.createQuery(hql,Long.class);
+        Long count = query.uniqueResult();
+        return count;
     }
 
-    public long getCount()throws Exception{
-        return userRepository.getCount();
-    }
-    public boolean exists(User user)throws Exception{
-        return userRepository.userExists(user.getName(),user.getEmail());
-    }
+    public boolean exists(String name,String email){
+        String hql = "select count(u) from User u where u.name = :name or u.email = :email";
+        Session session = sessionFactory.getCurrentSession();
+        Query<Integer> query = session.createQuery(hql,Integer.class);
+        query.setParameter("name",name);
+        query.setParameter("email",email);
+        Integer count = query.uniqueResult();
+        return count > 0;
+    } 
 
     //TODO:idList must not contain null
     //for retriving users associated with a event
-    public List<UserDTO> findAllById(Iterable<Long> idList)throws Exception{
+    public List<UserDTO> findAllById(List<Long> idList)throws Exception{
+
+        List<User> userList = getFullUserDetailsList(idList);
+
         List<UserDTO> list = new LinkedList<>();
-
-        List<User> entityList = userRepository.findAllById(idList);
-
-        entityList.forEach((userEntity)->{
+        
+        userList.forEach((user)->{
             UserDTO newDTO = new UserDTO();
-            newDTO.setName(userEntity.getName());
-            newDTO.setDescription(userEntity.getDescription());
-            newDTO.setEmail(userEntity.getEmail());
+            newDTO.setName(user.getName());
+            newDTO.setDescription(user.getDescription());
+            newDTO.setEmail(user.getEmail());
             list.add(newDTO);
         });
 
-        entityList.clear();
+        userList.clear();
 
         return list;
 
-    }
-    
-    public User findUserById(Long userId)throws UserNotFoundException,Exception{
-        Optional<User> user = userRepository.findById(userId);
-
-        if(user.isEmpty()){
-            throw new UserNotFoundException();
-        }
-
-        return user.get();
     }
 
     public Ticket buyTicket(Long userID,Long eventID)throws UserNotFoundException,EventNotFoundException,TicketExistsException,Exception{
@@ -172,7 +278,7 @@ public class UserService {
             throw new TicketExistsException();
         } 
 
-        User user = findUserById(userID);
+        User user = getUserByID(userID);
         Event event = eventService.getEventById(eventID);
 
         Ticket ticket = new Ticket();
