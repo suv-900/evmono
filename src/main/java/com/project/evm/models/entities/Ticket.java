@@ -19,7 +19,7 @@ import lombok.Setter;
 public class Ticket {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) 
-    private Long ticketId;
+    private Long id;
     
     private Long userID;
 
