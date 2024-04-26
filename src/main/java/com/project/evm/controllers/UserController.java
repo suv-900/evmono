@@ -23,6 +23,7 @@ import com.project.evm.models.dto.UserDTO;
 import com.project.evm.models.dto.UserLogin;
 import com.project.evm.models.entities.Ticket;
 import com.project.evm.models.entities.User;
+import com.project.evm.services.TicketService;
 import com.project.evm.services.TokenService;
 import com.project.evm.services.UserService;
 
@@ -40,12 +41,15 @@ public class UserController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private TicketService ticketService;
+
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/create")
     public void createUser(@Valid @RequestBody User user,HttpServletResponse response)
         throws UserExistsException,JWTCreationException,Exception{
         
-        if(userService.exists(user)){
+        if(userService.exists(user.getName(),user.getEmail())){
             throw new UserExistsException("User already exists cannot create another.");
         }
 
@@ -83,7 +87,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/getUser/{id}")
     public UserDTO getUser(@PathVariable("id")Long id)throws Exception,UserNotFoundException{
-        return userService.getUserById(id);
+        return userService.getUserByIdDTO(id);
     }
 
     @ResponseStatus(HttpStatus.FOUND)
@@ -99,7 +103,7 @@ public class UserController {
     {
         Long userID = tokenService.extractUserID(token);
 
-        return userService.buyTicket(userID,eventID);
+        return ticketService.buyTicket(userID,eventID);
     }
     // @ResponseStatus(HttpStatus.OK)
     // @DeleteMapping("/delete")

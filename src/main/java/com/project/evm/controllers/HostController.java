@@ -24,13 +24,13 @@ import com.project.evm.exceptions.UnauthorizedAccessException;
 import com.project.evm.models.dto.HostLogin;
 import com.project.evm.models.entities.Event;
 import com.project.evm.models.entities.Host;
+import com.project.evm.services.EventService;
 import com.project.evm.services.HostService;
 import com.project.evm.services.TokenService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
 
 @RestController
 @RequestMapping("/host")
@@ -41,11 +41,14 @@ public class HostController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private EventService eventService;
+
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/register")
     public void createHost(@Valid @RequestBody Host host,HttpServletResponse response)throws HostExistsException,Exception{
 
-        if(hostService.hostExists(host.getUsername(),host.getEmail())){
+        if(hostService.exists(host.getUsername(),host.getEmail())){
             throw new HostExistsException();
         }
 
@@ -70,17 +73,12 @@ public class HostController {
     public void createEvent(@Valid @RequestBody Event event,@RequestHeader(value="Token",required=true)String token)
     throws UnauthorizedAccessException,TokenExpiredException,JWTVerificationException,Exception,HostNotFoundException
     {
-        
         Long hostID = tokenService.extractHostID(token);
 
-        Optional<Host> host = hostService.getHostByIdFull(hostID);
+        Host host = hostService.getHostFullDetails(hostID);
 
-        if(host.isEmpty()){
-            throw new HostNotFoundException("Unknown state host not found.Try registering.");
-        }
-
-        event.setHostedBy(host.get());
-        hostService.createEvent(event);
+        event.setHostedBy(host);
+        eventService.saveEvent(event);
     }
 
     @PostMapping("/update-event")
@@ -91,7 +89,7 @@ public class HostController {
         
         tokenService.verifyHostToken(token);
 
-        hostService.updateEvent(event);
+        eventService.updateEvent(event);
     }
 
     @GetMapping("/get-event/{eventID}")
@@ -101,13 +99,8 @@ public class HostController {
     {
         tokenService.verifyHostToken(token);
 
-        Optional<Event> event = hostService.getEvent(eventID);
+        return eventService.retrieveEventById(eventID);
 
-        if(event.isEmpty()){
-            throw new EventNotFoundException();
-        }
-
-        return event.get();
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -117,7 +110,7 @@ public class HostController {
     {
         tokenService.verifyHostToken(token);
 
-        hostService.deleteEventById(eventID);
+        eventService.removeEvent(eventID);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -128,7 +121,7 @@ public class HostController {
     throws UnauthorizedAccessException,TokenExpiredException,JWTVerificationException,NullPointerException,Exception
     {
         tokenService.verifyToken(token);
-        hostService.increaseTicketCount(eventID,amount);
+        // hostService.increaseTicketCount(eventID,amount);
     }
 
 }

@@ -11,9 +11,7 @@ import com.project.evm.exceptions.CredentialsDontMatchException;
 import com.project.evm.exceptions.UserNotFoundException;
 import com.project.evm.models.dto.UserDTO;
 import com.project.evm.models.entities.User;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 public class UserService {
     
@@ -25,10 +23,10 @@ public class UserService {
     //persistent state
     //sessions
 
-    public void addUser(User user){
+    public Long addUser(User user){
         String hashedPassword = hasher.hashPassword(user.getPassword());
         user.setPassword(hashedPassword);
-        userDao.addUser(user);
+        return userDao.addUser(user);
     }
 
     public Optional<Long> getUserID(String name){
@@ -63,7 +61,14 @@ public class UserService {
     public User getUserByID(Long userID)throws UserNotFoundException{
         return userDao.getUserByID(userID);
     }
-
+    public UserDTO getUserByIdDTO(Long userID)throws UserNotFoundException{
+        UserDTO user = new UserDTO();
+        User dbUser = getUserByID(userID);
+        user.setName(dbUser.getName());
+        user.setEmail(dbUser.getEmail());
+        user.setDescription(dbUser.getDescription());
+        return user;
+    }
     //needs to be protected 
     public List<User> getFullUserDetailsList(List<Long> userIDs){
         return userDao.getFullUserDetailsList(userIDs);

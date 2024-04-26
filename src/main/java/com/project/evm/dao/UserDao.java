@@ -24,8 +24,7 @@ public class UserDao{
     //persistent state
     //sessions
     
-    @Transactional
-    public void addUser(User user){
+    public Long addUser(User user){
 
         //session object = unit of work with database
         Session session = sessionFactory.getCurrentSession();
@@ -34,7 +33,8 @@ public class UserDao{
         session.persist(user);
         
         //syncs the objects in persistence state to the datastore
-        //session.flush();
+        session.flush();
+        return user.getId();
     }
 
     @Transactional

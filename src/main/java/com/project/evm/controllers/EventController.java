@@ -23,6 +23,6 @@ public class EventController {
     @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/get-event/{eventID}")
     public Event getEvent(@PathVariable("eventID")@NotBlank Long eventID)throws EventNotFoundException,Exception{
-        return eventService.getEventById(eventID);
+        return eventService.retrieveEventById(eventID);
     }
 }

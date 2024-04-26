@@ -4,8 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.project.evm.models.dto.EventDTO;
-import com.project.evm.models.dto.HostDTO;
 import com.project.evm.models.entities.Event;
 import com.project.evm.models.entities.Host;
 
