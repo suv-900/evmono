@@ -10,6 +10,7 @@ public class HibernateUtil {
    private static SessionFactory sessionFactory = buildSessionFactory();
    
    private static SessionFactory buildSessionFactory(){
+    log.info("Buidling Session Factory");
     try{
         return new Configuration().configure().buildSessionFactory();
     }catch(Exception ex){

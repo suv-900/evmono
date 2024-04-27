@@ -19,8 +19,9 @@ public class EventDao {
 
     public Long saveEvent(Event event)throws Exception{
         Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
         session.persist(event);
-        session.flush();
+        session.getTransaction().commit();
         return event.getId();
     }
 

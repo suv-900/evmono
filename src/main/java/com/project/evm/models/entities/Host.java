@@ -2,6 +2,10 @@ package com.project.evm.models.entities;
 
 import java.util.List;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,6 +21,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table
+@Cacheable
+@Cache(region="events",usage=CacheConcurrencyStrategy.READ_ONLY)
 public class Host {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)

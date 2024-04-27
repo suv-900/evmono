@@ -2,6 +2,10 @@ package com.project.evm.models.entities;
 
 import java.util.Set;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +22,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table
+@Cacheable
+@Cache(region="users",usage=CacheConcurrencyStrategy.READ_ONLY)
 public class User {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) 

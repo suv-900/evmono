@@ -16,8 +16,9 @@ import jakarta.transaction.Transactional;
 
 @Repository
 public class TicketDao {
-    private SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+     private SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
      
+     @Transactional
      public boolean ticketExists(Long userID,Long eventID){
           String hql = "select count(t) from Ticket t where t.userID = :userID and t.eventID = :eventID";
           Session session = sessionFactory.getCurrentSession();
@@ -30,8 +31,9 @@ public class TicketDao {
      
      public Long saveTicket(Ticket ticket){
         Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
         session.persist(ticket);
-        session.flush();
+        session.getTransaction().commit();
         return ticket.getId();
      } 
      

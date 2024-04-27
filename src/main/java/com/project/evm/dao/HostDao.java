@@ -24,12 +24,10 @@ public class HostDao {
     private SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
     public Long addHost(Host host)throws Exception{
-        String hashedPassword = hasher.hashPassword(host.getPassword());
-        host.setPassword(hashedPassword);
-
         Session session = sessionFactory.getCurrentSession();
+        session.beginTransaction();
         session.persist(host);
-        session.flush();
+        session.getTransaction().commit();
         return host.getId();
     }
    

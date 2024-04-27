@@ -2,7 +2,7 @@ package com.project.evm.exceptions;
 
 public class HostExistsException extends RuntimeException {
    public HostExistsException(){
-        super();
+     super();
    }
 
    public HostExistsException(String args){

@@ -3,6 +3,9 @@ package com.project.evm.models.entities;
 import java.sql.Date;
 import java.util.Set;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +24,7 @@ import lombok.Setter;
 @Setter
 @Table
 @Cacheable
+@Cache(region="events",usage=CacheConcurrencyStrategy.READ_ONLY)
 public class Event{
     
     @Id

@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import com.project.evm.config.HibernateUtil;
@@ -28,24 +27,22 @@ public class UserDao{
 
         //session object = unit of work with database
         Session session = sessionFactory.getCurrentSession();
-        
+        session.beginTransaction(); 
         //attaches object to persistence state
         session.persist(user);
-        
+        session.getTransaction().commit(); 
         //syncs the objects in persistence state to the datastore
-        session.flush();
         return user.getId();
     }
 
     @Transactional
     public Optional<Long> getUserID(String name){
-        Session session = sessionFactory.getCurrentSession();
         String hql = "select id from User where name = :name";
-        Query<Long> query = session.createQuery(hql,Long.class);
-
-        query.setParameter("name",name);
-
-        return query.uniqueResultOptional();
+        Session session = sessionFactory.getCurrentSession();
+        
+        return session.createQuery(hql,Long.class)
+            .setParameter("name",name)
+            .uniqueResultOptional();
     }
 
     @Transactional
@@ -63,25 +60,28 @@ public class UserDao{
     public Optional<Object[]> loginUser(String username)throws 
         CredentialsDontMatchException,Exception,UserNotFoundException
     {
-        
         Session session = sessionFactory.getCurrentSession();
-        
         String hql = "select u.password,u.id from User u where u.name = :name";
         
-        Query<Object[]> query = session.createQuery(hql,Object[].class);
+        Optional<Object[]> result = session.createQuery(hql,Object[].class)
+            .setParameter("name",username)
+            .uniqueResultOptional();
         
-        query.setParameter("name",username);
-        
-        Optional<Object[]> result = query.uniqueResultOptional();
-
         return result;
     }
     
     
     @Transactional
-    public User getUserByID(Long userID)throws UserNotFoundException{
+    public User getUserByID(Long userID){
         Session session = sessionFactory.getCurrentSession();
         return session.get(User.class,userID);
+    }
+
+    @Transactional
+    public List<User> getAllUsers(){
+        Session session = sessionFactory.getCurrentSession();
+        return session.createQuery("from User",User.class)
+            .list();
     }
 
     //needs to be protected 
@@ -101,36 +101,36 @@ public class UserDao{
     public boolean existsByUsername(String username){
         String hql = "select count(u) from User u where u.name = :name";
         Session session = sessionFactory.getCurrentSession();
-        Query<Integer> query = session.createQuery(hql,Integer.class);
-        query.setParameter("name",username);
-        Integer count = query.uniqueResult();
+        Integer count = session.createQuery(hql,Integer.class)
+            .setParameter("name",username)
+            .uniqueResult();
         return count > 0;
     }
     
     public boolean existsByEmail(String email){
         String hql = "select count(u) from User u where u.email = :email";
         Session session = sessionFactory.getCurrentSession();
-        Query<Integer> query = session.createQuery(hql,Integer.class);
-        query.setParameter("email",email);
-        Integer count = query.uniqueResult();
+        Integer count = session.createQuery(hql,Integer.class)
+            .setParameter("email",email)
+            .uniqueResult();
         return count > 0;
     }
 
     public Long getCount(){
         String hql = "select count(u) from User u";
         Session session = sessionFactory.getCurrentSession();
-        Query<Long> query = session.createQuery(hql,Long.class);
-        Long count = query.uniqueResult();
+        Long count = session.createQuery(hql,Long.class)
+            .uniqueResult();
         return count;
     }
 
     public boolean exists(String name,String email){
         String hql = "select count(u) from User u where u.name = :name or u.email = :email";
         Session session = sessionFactory.getCurrentSession();
-        Query<Integer> query = session.createQuery(hql,Integer.class);
-        query.setParameter("name",name);
-        query.setParameter("email",email);
-        Integer count = query.uniqueResult();
+        Integer count = session.createQuery(hql,Integer.class)
+            .setParameter("name",name)
+            .setParameter("email",email)
+            .uniqueResult();
         return count > 0;
     } 
 
