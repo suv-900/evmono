@@ -35,28 +35,29 @@ public class UserDao{
         return user.getId();
     }
 
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public Optional<Long> getUserID(String name){
         String hql = "select id from User where name = :name";
         Session session = sessionFactory.getCurrentSession();
-        
+
         return session.createQuery(hql,Long.class)
             .setParameter("name",name)
             .uniqueResultOptional();
     }
 
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public User updateUser(User user){
         Session session = sessionFactory.getCurrentSession();
         return session.merge(user);
     }
 
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public void deleteUser(User user){
         Session session = sessionFactory.getCurrentSession();
         session.remove(user);
     }
 
+    @Transactional(rollbackOn=Exception.class)
     public Optional<Object[]> loginUser(String username)throws 
         CredentialsDontMatchException,Exception,UserNotFoundException
     {
@@ -71,13 +72,13 @@ public class UserDao{
     }
     
     
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public User getUserByID(Long userID){
         Session session = sessionFactory.getCurrentSession();
         return session.get(User.class,userID);
     }
 
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public List<User> getAllUsers(){
         Session session = sessionFactory.getCurrentSession();
         return session.createQuery("from User",User.class)
@@ -85,7 +86,7 @@ public class UserDao{
     }
 
     //needs to be protected 
-    @Transactional
+    @Transactional(rollbackOn=Exception.class)
     public List<User> getFullUserDetailsList(List<Long> userIDs){
         List<User> list = new LinkedList<User>();
         
@@ -98,6 +99,7 @@ public class UserDao{
         return list;
     }
 
+    @Transactional(rollbackOn=Exception.class)
     public boolean existsByUsername(String username){
         String hql = "select count(u) from User u where u.name = :name";
         Session session = sessionFactory.getCurrentSession();

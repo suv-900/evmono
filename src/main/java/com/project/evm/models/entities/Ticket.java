@@ -2,6 +2,10 @@ package com.project.evm.models.entities;
 
 import java.sql.Date;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,6 +19,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table
+@Cacheable
+@Cache(region="tickets",usage=CacheConcurrencyStrategy.READ_ONLY)
 public class Ticket {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY) 

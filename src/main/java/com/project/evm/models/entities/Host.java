@@ -22,7 +22,7 @@ import lombok.Setter;
 @Entity
 @Table
 @Cacheable
-@Cache(region="events",usage=CacheConcurrencyStrategy.READ_ONLY)
+@Cache(region="hosts",usage=CacheConcurrencyStrategy.READ_ONLY)
 public class Host {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
